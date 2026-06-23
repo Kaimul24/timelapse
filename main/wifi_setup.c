@@ -1,24 +1,14 @@
-#include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_mac.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "nvs_flash.h"
-
-#include "lwip/err.h"
-#include "lwip/sys.h"
+#include "wifi_setup.h"
 
 /* The examples use WiFi configuration that you can set via project configuration menu.
 
    If you'd rather not, just change the below entries to strings with
    the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
 */
-#define WIFI_SSID      CONFIG_ESP_WIFI_SSID
-#define WIFI_PASS      CONFIG_ESP_WIFI_PASSWORD
-#define WIFI_CHANNEL   CONFIG_ESP_WIFI_CHANNEL
-#define MAX_STA_CONN       CONFIG_ESP_MAX_STA_CONN
+#define WIFI_SSID      "timelapse_cam"
+#define WIFI_PASS      "timelapse_esp32"
+#define WIFI_CHANNEL   1
+#define MAX_STA_CONN   1
 
 #if CONFIG_ESP_GTK_REKEYING_ENABLE
 #define EXAMPLE_GTK_REKEY_INTERVAL CONFIG_ESP_GTK_REKEY_INTERVAL
@@ -28,7 +18,7 @@
 
 static const char *TAG = "WiFi Setup";
 
-static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data)
 {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {
@@ -92,18 +82,4 @@ void wifi_init_softap(void)
 
     ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
              WIFI_SSID, WIFI_PASS, WIFI_CHANNEL);
-}
-
-void app_main(void)
-{
-    //Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
-    wifi_init_softap();
 }

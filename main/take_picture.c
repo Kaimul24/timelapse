@@ -11,6 +11,7 @@
 
 #include "sdcard.h"
 #include "camera.h"
+#include "wifi_setup.h"
 
 #define BOARD_ESP32S3_XIAO
 #define CORE0 0
@@ -52,6 +53,13 @@ static void picture_task(void* params) {
 }
 
 void app_main(void) {
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
     ESP_ERROR_CHECK(init_camera(FRAMESIZE_QXGA, 12));
 
 #if defined(CONFIG_CAMERA_AF_SUPPORT) && CONFIG_CAMERA_AF_SUPPORT
@@ -61,7 +69,7 @@ void app_main(void) {
 #endif
 
     ESP_ERROR_CHECK(init_sdcard());
-    xTaskCreatePinnedToCore(picture_task, "picture_task", 4096, NULL, 3, &picture_task_handle, CORE0);
+    wifi_init_softap();
 
     while (1){ 
         vTaskDelay(pdMS_TO_TICKS(1000));  
