@@ -1,8 +1,23 @@
 #include "camera.h"
+#include "esp_err.h"
+#include "esp_log.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 
 static const char *TAG = "Camera";
+static SemaphoreHandle_t cam_mutex = NULL;
 
 esp_err_t init_camera(framesize_t frame_size, int quality) {   
+
+    if (cam_mutex == NULL) {
+        cam_mutex = xSemaphoreCreateMutex();
+
+        if (cam_mutex == NULL) {
+            ESP_LOGE(TAG, "Failed to create camera mutex");
+            return ESP_ERR_NO_MEM;
+        }
+    }
+
     camera_config_t camera_config = {
         .pin_pwdn = CAM_PIN_PWDN,
         .pin_reset = CAM_PIN_RESET,
@@ -46,9 +61,27 @@ esp_err_t init_camera(framesize_t frame_size, int quality) {
     return ESP_OK;
 }
 
-camera_fb_t* take_pic(void) {
-    camera_fb_t *pic = esp_camera_fb_get();
-    return pic;
+camera_fb_t* cam_get_frame(void) {
+    if (cam_mutex == NULL || 
+        xSemaphoreTake(cam_mutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+        ESP_LOGE(TAG, "Failed to acquire mutex in time");
+        return NULL;
+    }
+    camera_fb_t *frame = esp_camera_fb_get();
+
+    if (!frame) {
+        ESP_LOGE(TAG, "Failed to acquire frame buffer");
+        xSemaphoreGive(cam_mutex);
+    }
+
+    return frame;
+}
+
+void cam_release_frame(camera_fb_t *frame) {
+    if (frame) {
+        esp_camera_fb_return(frame);
+        xSemaphoreGive(cam_mutex);
+    }
 }
 
 #if defined(CONFIG_CAMERA_AF_SUPPORT) && CONFIG_CAMERA_AF_SUPPORT

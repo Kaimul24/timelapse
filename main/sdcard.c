@@ -47,9 +47,13 @@ esp_err_t init_sdcard(void) {
     return ESP_OK;
 }
 
-esp_err_t save_jpeg(camera_fb_t* pic) {
+esp_err_t save_jpeg(camera_fb_t* pic, const char *filename) {
+    if (strlen(filename) > 50) {
+        filename = filename + 50;
+    }
+
     char photo_name[50];
-    sprintf(photo_name, MOUNT_POINT "/pic_%lli.jpg", pic->timestamp.tv_sec);
+    sprintf(photo_name, MOUNT_POINT "/%s.jpg", filename);
     ESP_LOGI(TAG, "Saving JPEG to %s", photo_name);
     FILE *file = fopen(photo_name, "w");
 
@@ -58,8 +62,11 @@ esp_err_t save_jpeg(camera_fb_t* pic) {
         return ESP_FAIL;
     } else {
         size_t ret = fwrite(pic->buf, 1, pic->len, file);
-        if (ret != pic->len) ESP_LOGE(TAG, "fwrite failed!");
         fclose(file);
+        if (ret != pic->len) {
+            ESP_LOGE(TAG, "fwrite failed!");
+            return ESP_FAIL;
+        }
     }
     return ESP_OK;
 }

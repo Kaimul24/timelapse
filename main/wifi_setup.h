@@ -10,3 +10,4 @@
 #include "lwip/sys.h"
 
 void wifi_init_softap(void);
+void wifi_deinit_softap(void);

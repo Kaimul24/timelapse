@@ -24,7 +24,8 @@
 #define CAM_PIN_D7 48
 
 esp_err_t init_camera(framesize_t, int);
-camera_fb_t* take_pic(void);
+camera_fb_t* cam_get_frame(void);
+void cam_release_frame(camera_fb_t*);
 #if defined(CONFIG_CAMERA_AF_SUPPORT) && CONFIG_CAMERA_AF_SUPPORT
 static void maybe_init_autofocus(void);
 #endif

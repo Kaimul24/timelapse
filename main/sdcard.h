@@ -11,4 +11,4 @@
 #define PIN_NUM_CS 21
 
 esp_err_t init_sdcard(void);
-esp_err_t save_jpeg(camera_fb_t*);
+esp_err_t save_jpeg(camera_fb_t*, const char*);

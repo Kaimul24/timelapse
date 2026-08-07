@@ -10,3 +10,8 @@ sdkconfig.old
 # Editor/OS noise
 .DS_Store
 .vscode/
+
+# clang
+.cache
+
+project.md
